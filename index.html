@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Alvômetro">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#efe7d8">
+<link rel="manifest" href="manifest.json">
+<title>Alvômetro</title>
+<style>
+  :root{
+    --page-bg:#efe7d8;
+    --card-bg:#ffffff;
+    --ink:#2b2620;
+    --ink-soft:#6b6156;
+    --plus:#2f9e44;
+    --plus-dark:#237a35;
+    --minus:#e03131;
+    --minus-dark:#b02525;
+
+    --amarelo:#f4c22b;
+    --amarelo-total:#c9960f;
+    --amarelo-ink:#4a3a05;
+
+    --verde:#3fb86b;
+    --verde-total:#237a46;
+    --verde-ink:#0d3820;
+
+    --vermelho:#ef5b5b;
+    --vermelho-total:#c22f2f;
+    --vermelho-ink:#4a0d0d;
+
+    --azul:#4f8ef0;
+    --azul-total:#2560c4;
+    --azul-ink:#0c2a54;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --page-bg:#17140f;
+      --card-bg:#242019;
+      --ink:#f2ece0;
+      --ink-soft:#b5ab9b;
+    }
+  }
+  :root[data-theme="dark"]{
+    --page-bg:#17140f; --card-bg:#242019; --ink:#f2ece0; --ink-soft:#b5ab9b;
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--page-bg);
+    color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:28px 14px 60px;
+    min-height:100vh;
+  }
+  .app{ width:100%; max-width:460px; }
+
+  header{ margin-bottom:18px; padding:0 4px; }
+  header h1{
+    margin:0;
+    font-size:28px;
+    font-weight:800;
+    letter-spacing:-0.02em;
+  }
+  header p{
+    margin:4px 0 0;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+
+  .quad-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .quad{
+    border-radius:18px;
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+  }
+  .quad.amarelo{ background:var(--amarelo); color:var(--amarelo-ink); }
+  .quad.verde{ background:var(--verde); color:#ffffff; }
+  .quad.vermelho{ background:var(--vermelho); color:#ffffff; }
+  .quad.azul{ background:var(--azul); color:#ffffff; }
+
+  .row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:rgba(255,255,255,0.28);
+    border-radius:12px;
+    padding:6px 8px;
+  }
+  .quad.amarelo .row{ background:rgba(255,255,255,0.4); }
+
+  .row .val{
+    width:22px;
+    font-weight:800;
+    font-size:15px;
+    text-align:center;
+    flex-shrink:0;
+  }
+  .row .count{
+    flex:1;
+    background:var(--card-bg);
+    color:var(--ink);
+    border-radius:9px;
+    text-align:center;
+    font-weight:700;
+    font-size:15px;
+    padding:5px 0;
+    min-width:0;
+  }
+  .row.penal .val{
+    width:auto;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:0.02em;
+    text-align:left;
+    line-height:1.15;
+  }
+
+  .stepper{
+    width:34px;
+    height:34px;
+    border:none;
+    border-radius:9px;
+    color:#fff;
+    font-size:19px;
+    font-weight:700;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+    touch-action:manipulation;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+  .stepper.plus{ background:var(--plus); }
+  .stepper.plus:active{ background:var(--plus-dark); }
+  .stepper.minus{ background:var(--minus); }
+  .stepper.minus:active{ background:var(--minus-dark); }
+
+  .quad-total{
+    margin-top:2px;
+    border-radius:12px;
+    padding:9px;
+    text-align:center;
+    font-weight:800;
+    font-size:15px;
+    color:#fff;
+  }
+  .amarelo .quad-total{ background:var(--amarelo-total); }
+  .verde .quad-total{ background:var(--verde-total); }
+  .vermelho .quad-total{ background:var(--vermelho-total); }
+  .azul .quad-total{ background:var(--azul-total); }
+
+  .grand{
+    margin-top:14px;
+    background:var(--card-bg);
+    border-radius:18px;
+    padding:20px;
+    text-align:center;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+  }
+  .grand .num{
+    font-size:40px;
+    font-weight:800;
+    letter-spacing:-0.02em;
+    line-height:1;
+  }
+  .grand .label{
+    margin-top:2px;
+    color:var(--ink-soft);
+    font-size:13px;
+    font-weight:600;
+  }
+
+  .clear-btn{
+    margin-top:14px;
+    width:100%;
+    border:none;
+    border-radius:14px;
+    background:var(--minus);
+    color:#fff;
+    font-size:15px;
+    font-weight:700;
+    padding:13px;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .clear-btn:active{ background:var(--minus-dark); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>🎯 Alvômetro</h1>
+    <p>Alvo de 4 cores</p>
+  </header>
+
+  <div class="quad-grid">
+    <div class="quad amarelo" data-quad="amarelo">
+      <div class="row" data-value="5"><span class="val">5</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row" data-value="4"><span class="val">4</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row" data-value="3"><span class="val">3</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row" data-value="0"><span class="val">0</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row penal" data-penalty="true"><span class="val">PENAL.</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="quad-total">TOTAL: 0</div>
+    </div>
+
+    <div class="quad verde" data-quad="verde">
+      <div class="row" data-value="5"><span class="val">5</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row" data-value="4"><span class="val">4</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row" data-value="3"><span class="val">3</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row" data-value="0"><span class="val">0</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row penal" data-penalty="true"><span class="val">PENAL.</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="quad-total">TOTAL: 0</div>
+    </div>
+
+    <div class="quad vermelho" data-quad="vermelho">
+      <div class="row" data-value="5"><span class="val">5</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row" data-value="4"><span class="val">4</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row" data-value="3"><span class="val">3</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row" data-value="0"><span class="val">0</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row penal" data-penalty="true"><span class="val">PENAL.</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="quad-total">TOTAL: 0</div>
+    </div>
+
+    <div class="quad azul" data-quad="azul">
+      <div class="row" data-value="5"><span class="val">5</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row" data-value="4"><span class="val">4</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row" data-value="3"><span class="val">3</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row" data-value="0"><span class="val">0</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="row penal" data-penalty="true"><span class="val">PENAL.</span><span class="count">0</span><button class="stepper minus">–</button><button class="stepper plus">+</button></div>
+      <div class="quad-total">TOTAL: 0</div>
+    </div>
+  </div>
+
+  <div class="grand">
+    <div class="num" id="grandTotal">0</div>
+    <div class="label">PONTOS NO TOTAL</div>
+  </div>
+
+  <button class="clear-btn" id="clearBtn">🗑️ Limpar tudo</button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+
+  function calcQuad(quadEl){
+    let total = 0;
+    quadEl.querySelectorAll('.row[data-value]').forEach(function(row){
+      const value = parseInt(row.getAttribute('data-value'), 10);
+      const count = parseInt(row.querySelector('.count').textContent, 10);
+      total += value * count;
+    });
+    const penalRow = quadEl.querySelector('.row[data-penalty]');
+    const penalValue = parseInt(penalRow.querySelector('.count').textContent, 10);
+    total -= penalValue;
+    quadEl.querySelector('.quad-total').textContent = 'TOTAL: ' + total;
+    return total;
+  }
+
+  function updateGrandTotal(){
+    let grand = 0;
+    document.querySelectorAll('.quad').forEach(function(quadEl){
+      grand += calcQuad(quadEl);
+    });
+    document.getElementById('grandTotal').textContent = grand;
+  }
+
+  document.body.addEventListener('click', function(e){
+    const btn = e.target.closest('.stepper');
+    if (btn){
+      const row = btn.closest('.row');
+      const countEl = row.querySelector('.count');
+      const step = row.hasAttribute('data-penalty') ? 5 : 1;
+      const current = parseInt(countEl.textContent, 10);
+      if (btn.classList.contains('plus')){
+        countEl.textContent = current + step;
+      } else {
+        countEl.textContent = Math.max(0, current - step);
+      }
+      updateGrandTotal();
+      return;
+    }
+    if (e.target.closest('#clearBtn')){
+      document.querySelectorAll('.count').forEach(function(c){ c.textContent = '0'; });
+      updateGrandTotal();
+    }
+  });
+
+  updateGrandTotal();
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
