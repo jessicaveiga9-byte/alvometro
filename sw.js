@@ -1,5 +1,5 @@
-const CACHE_NAME = 'alvometro-cache-v1';
-const FILES_TO_CACHE = ['./', 'index.html', 'manifest.json'];
+const CACHE_NAME = 'alvometro-cache-v2';
+const FILES_TO_CACHE = ['./', 'index.html', 'alvometro.html', 'humanoide.html', 'manifest.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
